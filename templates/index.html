@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Sentiment Analyzer</title>
+    <!-- Google Fonts - Inter for general text -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Link to your custom CSS file -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <h1>AI Sentiment Analyzer</h1>
+      <p class="description">
+        Enter any text below to get its sentiment (Positive, Negative, or
+        Neutral).
+      </p>
+
+      <div class="input-section">
+        <textarea
+          id="textInput"
+          placeholder="Type or paste your text here..."
+          rows="8"
+        ></textarea>
+        <button id="analyzeButton">Analyze Sentiment</button>
+      </div>
+
+      <div class="result-section">
+        <h2>Analysis Result:</h2>
+        <div id="sentimentResult" class="sentiment-box">
+          <span class="placeholder">Sentiment will appear here...</span>
+        </div>
+        <!-- Optional: Display original text for verification -->
+        <!-- <div class="original-text-display">
+                <h3>Original Text:</h3>
+                <p id="originalTextDisplay"></p>
+            </div> -->
+      </div>
+    </div>
+
+    <script>
+      // Get references to HTML elements
+      const textInput = document.getElementById("textInput");
+      const analyzeButton = document.getElementById("analyzeButton");
+      const sentimentResult = document.getElementById("sentimentResult");
+      // const originalTextDisplay = document.getElementById('originalTextDisplay'); // For optional display
+
+      // Function to update the sentiment display
+      function displaySentiment(sentiment) {
+        sentimentResult.textContent = sentiment;
+        sentimentResult.className = "sentiment-box"; // Reset classes
+        if (sentiment === "Positive") {
+          sentimentResult.classList.add("positive");
+        } else if (sentiment === "Negative") {
+          sentimentResult.classList.add("negative");
+        } else if (sentiment === "Neutral") {
+          sentimentResult.classList.add("neutral");
+        } else {
+          sentimentResult.classList.add("error"); // For error messages
+        }
+      }
+
+      // Event listener for the Analyze button
+      analyzeButton.addEventListener("click", async () => {
+        const text = textInput.value.trim(); // Get text from input and remove whitespace
+
+        if (text === "") {
+          displaySentiment("Please enter some text to analyze.");
+          return;
+        }
+
+        // Show a loading state
+        displaySentiment("Analyzing...");
+        sentimentResult.classList.add("loading");
+
+        try {
+          // Send text to the Flask backend API
+          const response = await fetch("/analyze_sentiment", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ text: text }), // Send text as JSON
+          });
+
+          const data = await response.json(); // Parse the JSON response
+
+          sentimentResult.classList.remove("loading"); // Remove loading state
+
+          if (response.ok) {
+            // Display the predicted sentiment
+            displaySentiment(data.sentiment);
+            // originalTextDisplay.textContent = data.original_text; // For optional display
+          } else {
+            // Handle API errors
+            displaySentiment(`Error: ${data.error || "Something went wrong"}`);
+          }
+        } catch (error) {
+          // Handle network errors
+          sentimentResult.classList.remove("loading");
+          displaySentiment(
+            `Network Error: ${error.message}. Is the backend running?`
+          );
+          console.error("Fetch error:", error);
+        }
+      });
+
+      // Initialize display on page load
+      document.addEventListener("DOMContentLoaded", () => {
+        displaySentiment("Sentiment will appear here...");
+        sentimentResult.classList.add("placeholder");
+      });
+    </script>
+  </body>
+</html>
