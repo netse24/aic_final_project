@@ -1,0 +1,13 @@
+{
+  "cSpell.words": [
+    "huggingface",
+    "idna",
+    "itsdangerous",
+    "joblib",
+    "nltk",
+    "numpy",
+    "safetensors",
+    "urllib",
+    "Werkzeug"
+  ]
+}
